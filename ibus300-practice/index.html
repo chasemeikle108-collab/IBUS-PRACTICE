@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>IBUS 300 Midterm Practice</title>
+<style>
+:root{--bg:#fff;--fg:#1c1830;--mu:#6a647c;--p:#4b2e83;--g:#b7a57a;--ln:#d9d3ea;--ok:#1d7a46;--no:#b3261e;--sf:#f6f3fb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15121f;--fg:#ece8f7;--mu:#a49fb8;--p:#b9a3f0;--g:#c9b98c;--ln:#322c48;--ok:#5fd08f;--no:#ff8a80;--sf:#1e1a2e}}
+:root[data-theme=dark]{--bg:#15121f;--fg:#ece8f7;--mu:#a49fb8;--p:#b9a3f0;--g:#c9b98c;--ln:#322c48;--ok:#5fd08f;--no:#ff8a80;--sf:#1e1a2e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif}
+[hidden]{display:none!important}
+main{max-width:720px;margin:auto;padding:20px 16px 100px}
+h1{font:700 1.8rem/1.2 Georgia,serif;color:var(--p);margin:.2em 0 .1em}
+.sub{color:var(--mu);margin:0 0 14px}
+#ctl{display:flex;gap:10px;flex-wrap:wrap;padding:12px;border:2px solid var(--g);border-radius:8px}
+select,button,input{font:inherit;padding:8px 12px;border-radius:6px;border:1px solid var(--ln);background:var(--bg);color:var(--fg)}
+button{background:var(--p);color:var(--bg);border-color:var(--p);cursor:pointer;font-weight:600}
+.card{border-left:4px solid var(--p);background:var(--sf);padding:14px 16px;margin:18px 0;border-radius:0 8px 8px 0}
+.h span{font-size:.85rem;color:var(--mu);margin-right:14px}
+.s{padding:8px 10px;border-left:3px solid var(--g);margin:8px 0}
+.q{font-weight:600;margin:.4em 0}
+label{display:block;padding:5px 0;cursor:pointer}
+textarea{width:100%;box-sizing:border-box;margin:8px 0;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px;padding:8px;font:inherit}
+.m{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}.m span{flex:1 1 140px;font-weight:600}.m select{flex:2 1 200px;min-width:0}
+.fb{margin-top:8px}.ok{color:var(--ok)}.no{color:var(--no)}
+#bar{position:fixed;left:0;right:0;bottom:0;background:var(--sf);border-top:2px solid var(--p);display:flex;gap:16px;align-items:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+#bar b{flex:1}
+</style></head><body><main>
+<h1>IBUS 300 midterm practice</h1>
+<p class="sub">Chapters 1–5, Classes 1–7, HBR articles and team white papers. Study mode checks each answer as you go; exam mode holds everything until you finish.</p>
+<div id="ctl"><select id="tst"><option value="t1">Test 1</option><option value="t2">Test 2</option><option value="t3">Test 3 (random mix)</option><option value="all">All questions</option></select><select id="mode"><option value="study">Study mode</option><option value="exam">Exam mode</option></select>
+<select id="top"><option value="all">All topics</option><option value="G">Globalization</option><option value="P">Politics, law, economics</option><option value="C">Culture</option><option value="E">Ethics &amp; CSR</option><option value="A">HBR articles</option><option value="D">Economic development</option></select>
+<button onclick="go()">Start</button><input id="key" type="password" placeholder="Groq API key (optional, for AI grading)" style="flex:1 1 100%" oninput="try{localStorage.k=this.value}catch(e){}"></div>
+<div id="list"></div></main>
+<div id="bar"><b id="sc">Press Start</b><span id="tm">0:00</span><button id="fin" hidden onclick="cur.forEach((q,i)=>rev(i))">Finish and grade</button></div>
+<script>window.TESTS={}</script>
+<script src="tests/test1.js"></script>
+<script src="tests/test2.js"></script>
+<script>
+const T={G:"Globalization",P:"Politics & law",C:"Culture",E:"Ethics & CSR",A:"HBR articles",D:"Economic development"};
+const L={mc:"Multiple choice",tf:"True / false",ma:"Matching",sa:"Short answer",cs:"Case question",es:"Mini essay"};
+const $=s=>document.querySelector(s);let mode,S={},cur=[],t0,tm;
+function card(q,i){let b="";
+if(q.t=="mc")b=q.o.map((o,j)=>`<label><input type=radio name=q${i} value=${j}> ${o}</label>`).join("");
+else if(q.t=="tf")b=`<label><input type=radio name=q${i} value=1> True</label><label><input type=radio name=q${i} value=0> False</label><textarea rows=2 placeholder="Defend your answer…"></textarea>`;
+else if(q.t=="ma"){q.d=q.p.map(x=>x[1]).sort(()=>Math.random()-.5);b=q.p.map(x=>`<div class=m><span>${x[0]}</span><select><option value="">Choose…</option>${q.d.map(d=>`<option>${d}</option>`).join("")}</select></div>`).join("")}
+else b=`<textarea rows=5 placeholder="Type your answer…"></textarea>`;
+return `<section class=card id=c${i}><div class=h><span>${T[q.c]}</span><span>${L[q.t]}</span></div>${q.s?`<p class=s>${q.s}</p>`:""}<p class=q>${q.q}</p>${b}<button onclick=rev(${i}) ${mode=="exam"?"hidden":""}>${/mc|tf|ma/.test(q.t)?"Check":"Show model answer"}</button>${/sa|cs|es/.test(q.t)?` <button onclick=ai(${i}) ${mode=="exam"?"hidden":""}>Grade with AI</button>`:""}<div class=fb id=f${i}></div></section>`}
+function go(){mode=$("#mode").value;const f=$("#top").value;const k=$("#tst").value,P=k=="all"?[...TESTS.t1,...TESTS.t2]:k=="t3"?mixed():TESTS[k];cur=P.filter(q=>f=="all"||q.c==f);S={};
+$("#list").innerHTML=cur.map(card).join("");$("#fin").hidden=mode!="exam";
+clearInterval(tm);t0=Date.now();tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$("#tm").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0")},1000);upd()}
+function rev(i){const q=cur[i],c=$("#c"+i),f=$("#f"+i),r=c.querySelector("input:checked");let s=0,h="";
+const v=x=>`<b class=${x?"ok":"no"}>${x?"Correct.":"Not quite."}</b> `;
+if(q.t=="mc"){s=r&&+r.value==q.a?1:0;h=v(s)+`Answer: ${q.o[q.a]}. ${q.e}`}
+else if(q.t=="tf"){s=r&&(r.value=="1")==q.a?1:0;h=v(s)+`Answer: ${q.a?"True":"False"}. ${q.e}`}
+else if(q.t=="ma"){c.querySelectorAll("select").forEach((e,j)=>{if(e.value==q.p[j][1])s++});h=`<b>${s}/${q.p.length} matched.</b><ul>${q.p.map(x=>`<li>${x[0]}: ${x[1]}</li>`).join("")}</ul>`;s/=q.p.length}
+else{if(f.innerHTML)return;S[i]=0;f.innerHTML=`<p><b>Model answer:</b> ${q.m}</p><p>Tick what your answer covered:</p>`+q.k.map(k=>`<label><input type=checkbox onchange=ck(${i})> ${k}</label>`).join("");upd();return}
+S[i]=s;f.innerHTML=h;upd()}
+function ck(i){const b=document.querySelectorAll("#f"+i+" input");let n=0;b.forEach(x=>n+=x.checked);S[i]=n/b.length;upd()}
+function upd(){const n=Object.keys(S).length,s=Object.values(S).reduce((a,b)=>a+b,0);$("#sc").textContent=n?`Score ${+s.toFixed(1)} / ${n} graded (${cur.length} total)`:`${cur.length} questions`}
+
+function mixed(){const A=[...TESTS.t1,...TESTS.t2],sh=a=>a.sort(()=>Math.random()-.5),pick=(t,n)=>sh(A.filter(q=>q.t==t)).slice(0,n),c=A.filter(q=>q.t=="cs"),u=sh(c.map(q=>q.s))[0];return[...pick("mc",14),...pick("tf",6),...pick("ma",2),...pick("sa",5),...c.filter(q=>q.s==u),...pick("es",1)]}
+const esc=x=>String(x).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+async function ai(i){const q=cur[i],f=$("#f"+i),k=$("#key").value.trim(),a=$("#c"+i+" textarea").value.trim();
+if(!k){f.textContent="Paste a Groq API key in the box at the top first.";return}
+if(!a){f.textContent="Type an answer first.";return}
+f.textContent="Grading…";
+try{const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+k},body:JSON.stringify({model:"llama-3.3-70b-versatile",response_format:{type:"json_object"},messages:[{role:"system",content:"You grade a business student’s answer against a rubric. Reply only with JSON: {\"score\":0 to 1,\"feedback\":\"2-3 sentences\"}. Be fair and credit correct ideas in different words."},{role:"user",content:`Setup: ${q.s||""}\nQuestion: ${q.q}\nModel answer: ${q.m}\nRubric: ${q.k.join("; ")}\nStudent answer: ${a}`}]})});
+const d=await r.json(),j=JSON.parse(d.choices[0].message.content);S[i]=Math.max(0,Math.min(1,+j.score||0));f.innerHTML=`<b>AI score ${Math.round(S[i]*100)}%.</b> ${esc(j.feedback)}<p><b>Model answer:</b> ${q.m}</p>`;upd()}catch(e){f.textContent="AI grading failed. Check your key, or use Show model answer."}}
+try{$("#key").value=localStorage.k||""}catch(e){}
+</script></body></html>
