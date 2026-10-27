@@ -1,2 +1,0 @@
-# IBUS-PRACTICE
-Test prep
